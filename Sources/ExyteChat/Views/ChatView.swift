@@ -464,7 +464,7 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
             alignment: menuAlignment(row.message, chatType: type),
             positionInUserGroup: row.positionInUserGroup,
             leadingPadding: messageCustomizationParameters.avatarSize + MessageView.horizontalScreenEdgePadding + MessageView.horizontalSpacing,
-            trailingPadding: MessageView.statusViewWidth + MessageView.horizontalScreenEdgePadding + MessageView.horizontalSpacing,
+            trailingPadding: MessageView.horizontalScreenEdgePadding,
             font: messageCustomizationParameters.font,
             animationDuration: chatCustomizationParameters.messageMenuAnimationDuration,
             onAction: menuActionClosure(row.message),

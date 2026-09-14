@@ -26,7 +26,6 @@ struct MessageView: View {
     @State var giphyAspectRatio: CGFloat = 1
 
     static let widthWithMedia: CGFloat = 204
-    static let statusViewWidth: CGFloat = 10
     static let horizontalScreenEdgePadding: CGFloat = 12
     static let horizontalTextPadding: CGFloat = 12
     static let timeViewTextPadding: CGFloat = 12
@@ -51,13 +50,11 @@ struct MessageView: View {
         let isCurrentUser = message.user.isCurrentUser
         let bubblePaddings = MessageView.horizontalScreenEdgePadding * 2 + MessageView.horizontalBubblePadding
         let avatarViewWithPaddings = params.avatarSize + MessageView.horizontalSpacing
-        let statusViewWithPaddings = MessageView.statusViewWidth + MessageView.horizontalSpacing
         let textPaddings = MessageView.horizontalTextPadding * 2
         let widthWithoutMedia =
             chatSize.width
             - bubblePaddings
             - (isCurrentUser && params.showAvatar ? 0 : avatarViewWithPaddings)
-            - (isCurrentUser ? MessageView.statusViewWidth : 0)
             - textPaddings
 
         let maxWidth = message.attachments.isEmpty
@@ -68,7 +65,8 @@ struct MessageView: View {
         let lastLineWidth = text.lastLineWidth(labelWidth: maxWidth, font: params.font)
         let numberOfLines = text.numberOfLines(labelWidth: maxWidth, font: params.font)
 
-        let timeWidth = AttributedString(message.formattedDate).width(withConstrainedWidth: maxWidth, font: params.timeFont) + MessageView.timeViewTextPadding * 2
+        let statusWidth = displayedStatus == nil ? 0 : MessageStatusIcon.spacing + MessageStatusIcon.width
+        let timeWidth = AttributedString(message.formattedDate).width(withConstrainedWidth: maxWidth, font: params.timeFont) + statusWidth + MessageView.timeViewTextPadding * 2
 
         if numberOfLines == 1, finalWidth + CGFloat(timeWidth) < maxWidth {
             return .hstack
@@ -125,15 +123,6 @@ struct MessageView: View {
                 }
 
                 bubbleView(message)
-            }
-
-            if message.user.isCurrentUser, let status = message.status {
-                MessageStatusView(status: status) {
-                    if case let .error(draft) = status {
-                        viewModel.sendMessage(draft)
-                    }
-                }
-                .viewSize(MessageView.statusViewWidth)
             }
         }
         .padding(.top, topPadding)
@@ -482,14 +471,35 @@ struct MessageView: View {
         .padding(.top, 8)
     }
 
+    /// The status drawn beside the time: only on your own messages.
+    var displayedStatus: Message.Status? {
+        message.user.isCurrentUser ? message.status : nil
+    }
+
+    func retry() {
+        if case let .error(draft) = message.status {
+            viewModel.sendMessage(draft)
+        }
+    }
+
     @ViewBuilder
     func messageTimeView(needsCapsule: Bool = false) -> some View {
         if params.showTimeView {
             Group {
                 if needsCapsule {
-                    MessageTimeWithCapsuleView(text: message.formattedDate, isCurrentUser: message.user.isCurrentUser)
+                    MessageTimeWithCapsuleView(
+                        text: message.formattedDate,
+                        isCurrentUser: message.user.isCurrentUser,
+                        status: displayedStatus,
+                        onRetry: retry
+                    )
                 } else {
-                    MessageTimeView(text: message.formattedDate, userType: message.user.type)
+                    MessageTimeView(
+                        text: message.formattedDate,
+                        userType: message.user.type,
+                        status: displayedStatus,
+                        onRetry: retry
+                    )
                 }
             }
             .font(Font(params.timeFont))
