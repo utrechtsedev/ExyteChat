@@ -176,6 +176,9 @@ struct RecordWaveform: View {
             .frame(height: RecordWaveform.maxSampleHeight)
         }
         .frame(height: RecordWaveform.maxSampleHeight)
-        .fixedSize(horizontal: !addExtraDots, vertical: true)
+        // Not fixed horizontally: a GeometryReader's ideal width is not the
+        // waveform's, and fixing it drew the bars from the middle of their
+        // frame onwards, out of the bubble. The caller gives it its width.
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
