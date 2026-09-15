@@ -74,6 +74,14 @@ public struct CachedAsyncImage<Content>: View where Content: View {
         self._phase = State(wrappedValue: .empty)
     }
 
+    private func image(from loaded: KFCrossPlatformImage) -> Image {
+#if canImport(UIKit)
+        Image(uiImage: loaded)
+#else
+        Image(nsImage: loaded)
+#endif
+    }
+
     @Sendable
     private func load() async {
         guard let url = url else {
@@ -99,7 +107,29 @@ public struct CachedAsyncImage<Content>: View where Content: View {
             return
         }
 
-        let resource = ImageResource(downloadURL: url, cacheKey: cacheKey ?? url.absoluteString)
+        let key = cacheKey ?? url.absoluteString
+
+        // The host app fetches it when it has to sign the request. The result
+        // is cached here all the same, so it is asked once per image.
+        if let hostLoad = ChatImageLoader.load {
+            if let cached = try? await KingfisherManager.shared.cache.retrieveImage(forKey: key).image {
+                withAnimation(transaction.animation) {
+                    phase = .success(image(from: cached))
+                }
+                return
+            }
+            guard let data = await hostLoad(url), let loaded = KFCrossPlatformImage(data: data) else {
+                withAnimation(transaction.animation) { phase = .empty }
+                return
+            }
+            try? await KingfisherManager.shared.cache.store(loaded, forKey: key)
+            withAnimation(transaction.animation) {
+                phase = .success(image(from: loaded))
+            }
+            return
+        }
+
+        let resource = ImageResource(downloadURL: url, cacheKey: key)
 
         do {
             let image = try await withCheckedThrowingContinuation { continuation in
