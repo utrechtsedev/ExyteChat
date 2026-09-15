@@ -94,6 +94,17 @@ struct MessageView: View {
             || (chatType == .comments && positionInUserGroup == .first)
     }
 
+    /// Whether this message carries its sender's name.
+    ///
+    /// Like the avatar, the name belongs to the run of messages rather than to
+    /// each one in it: repeating it under itself says nothing, and pushes the
+    /// messages apart. It goes at the top, where a reader looks to see who
+    /// started talking, whichever end of the run the avatar sits at.
+    var showUsername: Bool {
+        guard params.showUsername, !message.user.isCurrentUser else { return false }
+        return isDisplayingMessageMenu || positionInUserGroup.isTop
+    }
+
     var topPadding: CGFloat {
         if chatType == .comments { return 0 }
         return positionInUserGroup.isTop && !positionInMessagesSection.isTop ? 8 : 4
@@ -149,7 +160,7 @@ struct MessageView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                if params.showUsername, !message.user.isCurrentUser {
+                if showUsername {
                     Text(message.user.name)
                         .font(.caption.weight(.bold))
                         .padding(.horizontal, MessageView.horizontalTextPadding)
@@ -185,9 +196,9 @@ struct MessageView: View {
                     }
                 }
             }
-            .padding(.top, (params.showUsername && !message.user.isCurrentUser) || message.attachments.isEmpty ? 8 : 0)
+            .padding(.top, showUsername || message.attachments.isEmpty ? 8 : 0)
             .padding(.bottom, message.hasText ? 8 : 0)
-            .bubbleBackground(message, params: params, theme: theme)
+            .bubbleBackground(message, theme: theme, showsUsername: showUsername)
             .zIndex(0)
         }
         .applyIf(isDisplayingMessageMenu) {
@@ -223,7 +234,7 @@ struct MessageView: View {
         }
         .font(.caption2)
         .padding(.vertical, 8)
-        .bubbleBackground(message, params: params, theme: theme, isReply: true)
+        .bubbleBackground(message, theme: theme, isReply: true)
     }
 
     @ViewBuilder
@@ -521,7 +532,7 @@ private struct PinTailShape: Shape {
 extension View {
 
     @ViewBuilder
-    func bubbleBackground(_ message: Message, params: MessageCustomizationParameters, theme: ChatTheme, isReply: Bool = false) -> some View {
+    func bubbleBackground(_ message: Message, theme: ChatTheme, isReply: Bool = false, showsUsername: Bool = false) -> some View {
         let radius: CGFloat = !message.attachments.isEmpty ? 12 : 20
         let additionalMediaInset: CGFloat = message.attachments.count > 1 ? 2 : 0
         self.frame(
@@ -530,7 +541,7 @@ extension View {
         )
         .foregroundColor(theme.colors.messageText(message.user.type))
         .background {
-            if (params.showUsername && !message.user.isCurrentUser) || isReply || message.hasText || message.recording != nil {
+            if showsUsername || isReply || message.hasText || message.recording != nil {
                 RoundedRectangle(cornerRadius: radius)
                     .foregroundColor(theme.colors.messageBG(message.user.type))
                     .opacity(isReply ? theme.style.replyOpacity : 1)
