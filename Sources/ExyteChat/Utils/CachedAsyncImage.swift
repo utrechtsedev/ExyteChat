@@ -110,7 +110,10 @@ public struct CachedAsyncImage<Content>: View where Content: View {
         let key = cacheKey ?? url.absoluteString
 
         // The host app fetches it when it has to sign the request. The result
-        // is cached here all the same, so it is asked once per image.
+        // is kept in memory here, so it is asked once per image while the app
+        // runs; on disk it is the host's to keep, as it may be content it
+        // decrypted, which must not outlive its message in a cache the host
+        // does not control.
         if let hostLoad = ChatImageLoader.load {
             if let cached = try? await KingfisherManager.shared.cache.retrieveImage(forKey: key).image {
                 withAnimation(transaction.animation) {
@@ -122,7 +125,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
                 withAnimation(transaction.animation) { phase = .empty }
                 return
             }
-            try? await KingfisherManager.shared.cache.store(loaded, forKey: key)
+            try? await KingfisherManager.shared.cache.store(loaded, forKey: key, toDisk: false)
             withAnimation(transaction.animation) {
                 phase = .success(image(from: loaded))
             }
