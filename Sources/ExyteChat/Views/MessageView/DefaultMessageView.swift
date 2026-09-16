@@ -19,7 +19,7 @@ struct DefaultMessageView: View {
             positionInMessagesSection: params.positionInMessagesSection,
             chatType: chatType,
             params: customizationParams,
-            isDisplayingMessageMenu: false
+            isDisplayingMessageMenu: params.isDisplayingMessageMenu
         )
     }
 }

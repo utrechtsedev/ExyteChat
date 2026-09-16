@@ -15,6 +15,7 @@ import SwiftUI
 /// - closure to show message context menu
 /// - closure to pass user interaction, .reply for example
 /// - pass attachment to this closure to use ChatView's fullscreen media viewer
+/// - whether the message is drawn as the preview in its own message menu
 public struct MessageBuilderParameters {
     public let message: Message
     public let positionInGroup: PositionInUserGroup
@@ -23,6 +24,10 @@ public struct MessageBuilderParameters {
     public let showContextMenuClosure: () -> Void
     public let messageActionClosure: (Message, DefaultMessageMenuAction) -> Void
     public let showAttachmentClosure: (Attachment) -> Void
+    /// True for the copy of the message the message menu shows. The default
+    /// view draws that copy without its reply quote and reactions; a custom
+    /// view can leave out what belongs beside the message rather than in it.
+    public let isDisplayingMessageMenu: Bool
 
     @MainActor public func defaultMessageView() -> some View {
         DefaultMessageView(params: self)

@@ -34,7 +34,8 @@ struct ChatMessageView<MessageContent: View>: View {
                     messageActionClosure: viewModel.messageMenuAction(),
                     showAttachmentClosure: { attachment in
                         self.viewModel.presentAttachmentFullScreen(attachment)
-                    }
+                    },
+                    isDisplayingMessageMenu: isDisplayingMessageMenu
                 )
             )
 
