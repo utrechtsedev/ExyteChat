@@ -333,9 +333,7 @@ ChatView(messages: viewModel.messages) { draft in
 ### makes sense only for built-in message view    
 `showMessageTimeView` - show timestamp in a corner of the message    
 `showUsername` - show username on top of message
-`messageLinkPreviewLimit` - limit the maximum number of link previews per message    
-`linkPreviewsEnabled` - enable or disable message link previews globally    
-`shouldShowPreviewForLink` - provide custom logic to decide whether a specific URL should show a preview    
+`Message.linkPreview` - a link preview the message carries (title, summary, image). The library draws it as given and never fetches a link itself, so a reader's device never contacts the linked site; whoever makes the preview does    
 `setMessageFont` - pass custom font to use for messages      
 
 `showAvatar` - show user avatars    

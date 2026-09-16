@@ -55,6 +55,7 @@ public struct Message: Identifiable, Sendable {
     public var createdAt: Date
 
     public var attributedText: AttributedString
+    public var linkPreview: LinkPreview?
     public var attachments: [Attachment]
     public var reactions: [Reaction]
     public var giphyMediaId: String?
@@ -80,6 +81,7 @@ public struct Message: Identifiable, Sendable {
         status: Status? = nil,
         createdAt: Date = Date(),
         text: String = "",
+        linkPreview: LinkPreview? = nil,
         attachments: [Attachment] = [],
         giphyMediaId: String? = nil,
         staticLocation: StaticLocation? = nil,
@@ -94,6 +96,7 @@ public struct Message: Identifiable, Sendable {
         self.status = status
         self.createdAt = createdAt
         self.attributedText = text.applyDefaultAttributes()
+        self.linkPreview = linkPreview
         self.attachments = attachments
         self.giphyMediaId = giphyMediaId
         self.staticLocation = staticLocation
@@ -110,6 +113,7 @@ public struct Message: Identifiable, Sendable {
         status: Status? = nil,
         createdAt: Date = Date(),
         attributedText: AttributedString,
+        linkPreview: LinkPreview? = nil,
         attachments: [Attachment] = [],
         giphyMediaId: String? = nil,
         staticLocation: StaticLocation? = nil,
@@ -124,6 +128,7 @@ public struct Message: Identifiable, Sendable {
         self.status = status
         self.createdAt = createdAt
         self.attributedText = attributedText
+        self.linkPreview = linkPreview
         self.attachments = attachments
         self.giphyMediaId = giphyMediaId
         self.staticLocation = staticLocation
@@ -191,6 +196,7 @@ extension Message: Equatable {
         lhs.status == rhs.status &&
         lhs.createdAt == rhs.createdAt &&
         lhs.attributedText == rhs.attributedText &&
+        lhs.linkPreview == rhs.linkPreview &&
         lhs.giphyMediaId == rhs.giphyMediaId &&
         lhs.staticLocation == rhs.staticLocation &&
         lhs.liveLocation == rhs.liveLocation &&

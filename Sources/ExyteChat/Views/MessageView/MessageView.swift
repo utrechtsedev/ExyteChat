@@ -43,7 +43,7 @@ struct MessageView: View {
 
     var timeViewArrangement: TimeViewArrangement {
         let text = message.attributedText
-        if !text.urls.isEmpty && params.linkPreviewLimit > 0 {
+        if message.linkPreview != nil {
             return .vstack
         }
 
@@ -222,6 +222,7 @@ struct MessageView: View {
             if message.hasText {
                 MessageTextView(
                     attributedText: message.attributedText,
+                    linkPreview: nil,
                     userType: message.user.type,
                     params: params
                 )
@@ -430,6 +431,7 @@ struct MessageView: View {
     func textWithTimeView(_ message: Message) -> some View {
         let messageView = MessageTextView(
             attributedText: message.attributedText,
+            linkPreview: message.linkPreview,
             userType: message.user.type,
             params: params
         )

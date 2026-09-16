@@ -61,8 +61,6 @@ public struct ScrollToParams: Equatable {
 struct MessageCustomizationParameters {
     var showTimeView = true
     var showUsername = false
-    var linkPreviewLimit = 1
-    var shouldShowPreviewForLink: (URL) -> Bool = { _ in true }
     var font = UIFontMetrics.default.scaledFont(for: UIFont.systemFont(ofSize: 15))
     var timeFont = UIFontMetrics.default.scaledFont(for: UIFont.systemFont(ofSize: 10))
 

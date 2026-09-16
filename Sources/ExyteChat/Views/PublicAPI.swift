@@ -283,22 +283,6 @@ public extension ChatView {
         return view
     }
 
-    func messageLinkPreviewLimit(_ limit: Int) -> ChatView {
-        var view = self
-        view.messageCustomizationParameters.linkPreviewLimit = limit
-        return view
-    }
-
-    func linkPreviewsEnabled(_ enabled: Bool) -> ChatView {
-        messageLinkPreviewLimit(enabled ? self.messageCustomizationParameters.linkPreviewLimit : 0)
-    }
-
-    func shouldShowPreviewForLink(_ shouldShowPreviewForLink: @escaping (URL) -> Bool) -> ChatView {
-        var view = self
-        view.messageCustomizationParameters.shouldShowPreviewForLink = shouldShowPreviewForLink
-        return view
-    }
-
     func setMessageFont(_ font: UIFont) -> ChatView {
         var view = self
         view.messageCustomizationParameters.font = font
