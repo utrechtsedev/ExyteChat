@@ -6,7 +6,7 @@ import Foundation
 import Combine
 import AVKit
 
-// TODO: Create option "download video before playing"
+@MainActor
 final class VideoViewModel: ObservableObject {
 
     @Published var attachment: Attachment
@@ -17,14 +17,31 @@ final class VideoViewModel: ObservableObject {
 
     private var subscriptions = Set<AnyCancellable>()
     @Published var status: AVPlayer.Status = .unknown
+    /// Fetching the file to play, while it is (see `ChatMediaFiles`).
+    private var loading: Task<Void, Never>?
 
     init(attachment: Attachment) {
         self.attachment = attachment
     }
 
     func onStart() {
+        guard player == nil, loading == nil else { return }
+        let url = attachment.full
+        loading = Task { [weak self] in
+            let playable = await ChatMediaFiles.playable(url)
+            guard let self else { return }
+            self.loading = nil
+            guard let playable else {
+                self.status = .failed
+                return
+            }
+            self.startPlayer(url: playable)
+        }
+    }
+
+    private func startPlayer(url: URL) {
         if player == nil {
-            self.player = AVPlayer(url: attachment.full)
+            self.player = AVPlayer(url: url)
             self.player?.publisher(for: \.status)
                 .receive(on: DispatchQueue.main)
                 .assign(to: &$status)
@@ -34,7 +51,7 @@ final class VideoViewModel: ObservableObject {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.finishVideo()
+                MainActor.assumeIsolated { self?.finishVideo() }
             }
         }
     }

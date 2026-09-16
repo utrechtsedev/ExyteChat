@@ -48,14 +48,16 @@ final actor RecordingPlayer: ObservableObject {
     private let audioSession = AVAudioSession()
     private var player: AVPlayer?
     private var timeObserver: Any?
+    /// The recording whose file is being fetched, while it is.
+    private var resolving: URL?
 
     init() {
         try? audioSession.setCategory(.playback)
         try? audioSession.overrideOutputAudioPort(.speaker)
     }
 
-    func play(_ recording: Recording) {
-        setupPlayer(for: recording)
+    func play(_ recording: Recording) async {
+        guard await setupPlayer(for: recording) else { return }
         play()
     }
 
@@ -64,17 +66,17 @@ final actor RecordingPlayer: ObservableObject {
         internalPlaying = false
     }
 
-    func togglePlay(_ recording: Recording) {
+    func togglePlay(_ recording: Recording) async {
         if self.recording?.url != recording.url {
-            setupPlayer(for: recording)
+            guard await setupPlayer(for: recording) else { return }
         }
         internalPlaying ? pause() : play()
     }
 
-    func seek(with recording: Recording, to progress: Double) {
+    func seek(with recording: Recording, to progress: Double) async {
         let goalTime = recording.duration * progress
         if self.recording == nil {
-            setupPlayer(for: recording)
+            guard await setupPlayer(for: recording) else { return }
             Task {
                 try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
                 await player?.seek(to: CMTime(seconds: goalTime, preferredTimescale: 10))
@@ -82,7 +84,7 @@ final actor RecordingPlayer: ObservableObject {
             }
             return
         }
-        player?.seek(to: CMTime(seconds: goalTime, preferredTimescale: 10))
+        await player?.seek(to: CMTime(seconds: goalTime, preferredTimescale: 10))
         if !internalPlaying {
             play()
         }
@@ -98,6 +100,7 @@ final actor RecordingPlayer: ObservableObject {
 
     func reset() {
         if internalPlaying { pause() }
+        resolving = nil
         recording = nil
     }
 
@@ -108,8 +111,16 @@ final actor RecordingPlayer: ObservableObject {
         NotificationCenter.default.post(name: .chatAudioIsPlaying, object: self)
     }
 
-    private func setupPlayer(for recording: Recording) {
-        guard let url = recording.url else { return }
+    /// Point the player at `recording`. False when its file could not be had,
+    /// when it is already being fetched, or when something else was asked for
+    /// while it was.
+    private func setupPlayer(for recording: Recording) async -> Bool {
+        guard let url = recording.url, resolving != url else { return false }
+        resolving = url
+        let playable = await ChatMediaFiles.playable(url)
+        guard resolving == url else { return false }
+        resolving = nil
+        guard let playable else { return false }
         self.recording = recording
 
         NotificationCenter.default.removeObserver(self)
@@ -117,7 +128,7 @@ final actor RecordingPlayer: ObservableObject {
         player?.replaceCurrentItem(with: nil)
         player = nil
 
-        let playerItem = AVPlayerItem(url: url)
+        let playerItem = AVPlayerItem(url: playable)
         player = AVPlayer(playerItem: playerItem)
         
         NotificationCenter.default.addObserver(forName: .chatAudioIsPlaying, object: nil, queue: nil) { notification in
@@ -158,6 +169,7 @@ final actor RecordingPlayer: ObservableObject {
                 }
             }
         }
+        return true
     }
 
     private func setPlayingState(_ isPlaying: Bool) {
