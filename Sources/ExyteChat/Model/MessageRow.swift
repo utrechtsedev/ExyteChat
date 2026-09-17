@@ -84,6 +84,15 @@ struct MessageRow: Equatable {
     }
 }
 
+extension BidirectionalCollection where Element == MessageRow {
+    /// The message whose row, once shown, starts a pagination `rowsIn` rows
+    /// from the start of these: that row, or the last one when there are
+    /// fewer.
+    func paginationTarget(rowsIn: Int) -> String? {
+        (dropFirst(rowsIn).first ?? last)?.message.id
+    }
+}
+
 extension MessageRow: Identifiable {
     public typealias ID = String
     public var id: String {

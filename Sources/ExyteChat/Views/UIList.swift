@@ -476,12 +476,14 @@ struct UIList<MessageContent: View>: UIViewRepresentable {
         let type: ChatType
         var sections: [MessagesSection] {
             didSet {
-                if let id = sections.last?.rows.last?.message.id {
-                    olderPaginationTargetMessageID = id
-                }
-                if let id = sections.first?.rows.first?.message.id {
-                    newerPaginationTargetMessageID = id
-                }
+                // Newest first, as the table has them.
+                let rows = sections.flatMap(\.rows)
+                olderPaginationTargetMessageID = rows.reversed().paginationTarget(
+                    rowsIn: chatParams.olderMessagesPaginationHandler?.rowsFromEnd ?? 0
+                )
+                newerPaginationTargetMessageID = rows.paginationTarget(
+                    rowsIn: chatParams.newerMessagesPaginationHandler?.rowsFromEnd ?? 0
+                )
             }
         }
         let ids: [String]

@@ -26,6 +26,12 @@ public struct PaginationHandler {
         self.loadingIndicatorBuilder = { AnyView(loadingIndicatorBuilder()) }
     }
 
+    /// How many rows in from its end of the list a `.cellIndex` trigger sits.
+    var rowsFromEnd: Int? {
+        guard case .cellIndex(let offset) = triggerType else { return nil }
+        return Swift.max(0, offset)
+    }
+
     @available(*, deprecated, message: "use TriggerType init instead")
     public init<V: View>(offset: Int = 0, hasMoreToLoad: Bool = true, handleClosure: @escaping () async -> (), loadingIndicatorBuilder: @escaping ()->V = { EmptyView() }) {
         self.triggerType = .cellIndex(offset)
