@@ -60,6 +60,17 @@ public extension ChatView {
         return view
     }
 
+    /// The scroll-to-bottom button of a list that does not always hold the
+    /// newest messages: with `showsAtBottom` it shows at the bottom of the
+    /// list too, and a tap calls `action` instead of scrolling to the newest
+    /// message the list holds.
+    func scrollToBottomButton(showsAtBottom: Bool, action: @escaping () -> Void) -> ChatView {
+        var view = self
+        view.chatCustomizationParameters.showsScrollToBottomButtonAtBottom = showsAtBottom
+        view.chatCustomizationParameters.scrollToBottomAction = action
+        return view
+    }
+
     func showNetworkConnectionProblem(_ show: Bool) -> ChatView {
         var view = self
         view.chatCustomizationParameters.showNetworkConnectionProblem = show
@@ -144,7 +155,9 @@ public extension ChatView {
         return view
     }
 
-    /// scroll to message by id
+    /// Scroll to a message, or an end of the list. Each `ScrollToParams` is
+    /// one request: keep it while it stands, and make a new one to scroll
+    /// again. One made anew on every update scrolls on every update.
     func scrollTo(_ scrollToParams: ScrollToParams?) -> ChatView {
         var view = self
         view.chatCustomizationParameters.scrollToParams = scrollToParams

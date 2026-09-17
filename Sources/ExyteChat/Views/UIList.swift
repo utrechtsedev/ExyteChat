@@ -796,7 +796,16 @@ struct UIList<MessageContent: View>: UIViewRepresentable {
                     tableView.endUpdates()
                     tableView.relayoutHeadersFooters()
                     await handler.handleClosure()
-                    // set olderInProgress to false after table update is complete
+                    // The table update the load caused ends it. A load that
+                    // changed nothing, or failed, causes none, and would leave
+                    // the list loading for good; so it ends here unless an
+                    // update is being applied, which ends it itself.
+                    if !updateInProgress {
+                        tableView.beginUpdates()
+                        paginationState.olderInProgress = false
+                        tableView.endUpdates()
+                        tableView.relayoutHeadersFooters()
+                    }
                 }
             }
         }
@@ -809,7 +818,13 @@ struct UIList<MessageContent: View>: UIViewRepresentable {
                     tableView.endUpdates()
                     tableView.relayoutHeadersFooters()
                     await handler.handleClosure()
-                    // set newerInProgress to false after table update is complete
+                    // As for older messages.
+                    if !updateInProgress {
+                        tableView.beginUpdates()
+                        paginationState.newerInProgress = false
+                        tableView.endUpdates()
+                        tableView.relayoutHeadersFooters()
+                    }
                 }
             }
         }

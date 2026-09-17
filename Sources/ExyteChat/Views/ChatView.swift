@@ -317,9 +317,14 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
             ZStack(alignment: .bottomTrailing) {
                 list
 
-                if chatCustomizationParameters.showScrollToBottomButton, !isScrolledToBottom {
+                if chatCustomizationParameters.showScrollToBottomButton,
+                   !isScrolledToBottom || chatCustomizationParameters.showsScrollToBottomButtonAtBottom {
                     Button {
-                        self.pendingScrollTo = ScrollToParams(.newestMessage) // Cannot assign to property: 'self' is immutable
+                        if let action = chatCustomizationParameters.scrollToBottomAction {
+                            action()
+                        } else {
+                            self.pendingScrollTo = ScrollToParams(.newestMessage)
+                        }
                     } label: {
                         theme.images.scrollToBottom
                             .viewSize(40)

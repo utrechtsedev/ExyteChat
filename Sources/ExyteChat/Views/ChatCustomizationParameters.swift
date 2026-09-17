@@ -11,6 +11,12 @@ import ExyteMediaPicker
 struct ChatCustomizationParameters {
     var isListAboveInputView: Bool = true
     var showScrollToBottomButton: Bool = true
+    /// The scroll-to-bottom button shows at the bottom of the list too: the
+    /// list does not hold the newest messages.
+    var showsScrollToBottomButtonAtBottom: Bool = false
+    /// What the scroll-to-bottom button does instead of scrolling to the
+    /// newest message the list holds.
+    var scrollToBottomAction: (() -> Void)?
     var showNetworkConnectionProblem: Bool = false
     var showDateHeaders: Bool = true
     var isScrollEnabled: Bool = true
@@ -44,6 +50,10 @@ public struct ScrollToParams: Equatable {
     }
 
     let scrollTo: ScrollTo
+    /// Tells two requests for the same place apart: a request is something
+    /// that happens, so asking again scrolls again, even to where the list
+    /// was sent last time.
+    private let id = UUID()
 
     public init(messageID: String, position: UITableView.ScrollPosition, offset: CGFloat = 0) {
         self.scrollTo = .messageID(messageID: messageID, position: position, offset: offset)
