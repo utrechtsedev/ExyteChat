@@ -143,6 +143,7 @@ struct UIList<MessageContent: View>: UIViewRepresentable {
                 context.coordinator.paginationState.newerInProgress = false
                 tableView.endUpdates()
                 tableView.relayoutHeadersFooters()
+                context.coordinator.paginateIfTriggerRowsShown(tableView)
             }
         }
     }
@@ -786,6 +787,27 @@ struct UIList<MessageContent: View>: UIViewRepresentable {
                case let .pixels(offset) = handler.triggerType,
                contentOffset <= offset,
                let tableView = scrollView as? UITableView {
+                performNewerPagination(tableView)
+            }
+        }
+
+        /// Start the loads whose trigger row is on screen already. A trigger
+        /// fires as its row comes into view, and after an update a row that
+        /// was already on screen does not come into view again: a list whose
+        /// rows all fit would never load more. Called after updates only, so a
+        /// load that fails, and changes nothing, is not started over and over.
+        func paginateIfTriggerRowsShown(_ tableView: UITableView) {
+            let shown = Set((tableView.indexPathsForVisibleRows ?? []).compactMap { messageRow(at: $0)?.message.id })
+            if !paginationState.olderInProgress,
+               let id = olderPaginationTargetMessageID, shown.contains(id),
+               let handler = chatParams.olderMessagesPaginationHandler,
+               handler.hasMoreToLoad, handler.rowsFromEnd != nil {
+                performOlderPagination(tableView)
+            }
+            if !paginationState.newerInProgress,
+               let id = newerPaginationTargetMessageID, shown.contains(id),
+               let handler = chatParams.newerMessagesPaginationHandler,
+               handler.hasMoreToLoad, handler.rowsFromEnd != nil {
                 performNewerPagination(tableView)
             }
         }
